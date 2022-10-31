@@ -1,0 +1,16 @@
+{% extends "layout.jinja2" %}
+
+{% block content %}
+<div class="content">
+  <h1><span class="font-semi-bold">{{project}}</span> </h1>
+  <p class="lead">Go ahead and upload a file</p>
+  <form action="/compress" method="post" accept-charset="utf-8" enctype="multipart/form-data" class="">
+
+    <div class="form-group">
+      <label for="binary_data">Data to compress</label>
+      <input id="binary_data" name="binary_data" type="file" value="" />
+    </div>
+    <input type="submit" value="Submit" class="btn btn-default" />
+  </form>
+</div>
+{% endblock content %}
