@@ -1,9 +1,13 @@
 import os
 import uuid
 import shutil
+from construct import Array, Int24sb, Struct
 from pyramid.response import Response
+from pyramid.view import view_config
+from cinchworm import segmenter as seg
 
 
+@view_config(route_name='compress')
 def compress_binary(request):
     # ``filename`` contains the name of the file in string format.
     #
@@ -24,7 +28,7 @@ def compress_binary(request):
     # and if you write to an untrusted location you will need to do
     # some extra work to prevent symlink attacks.
 
-    file_path = os.path.join('/tmp', '%s.mp3' % uuid.uuid4())
+    file_path = os.path.join(os.getcwd(), 'uploads', '%s.bin' % uuid.uuid4())
 
     # We first write to a temporary file to prevent incomplete files from
     # being used.
@@ -32,9 +36,18 @@ def compress_binary(request):
     temp_file_path = file_path + '~'
 
     # Finally write the data to a temporary file
+    input_file.seek(0, os.SEEK_END)
+    input_file_size = input_file.tell()
     input_file.seek(0)
+    value_count = int(input_file_size / 3)
+    format = Struct("data" / Array(value_count, Int24sb))
+    container = format.parse(input_file.read())
+    cleandata = [int(d) for d in container.data]
+    segments = seg.Segmenter(cleandata).segments()
+
     with open(temp_file_path, 'wb') as output_file:
-        shutil.copyfileobj(input_file, output_file)
+        for s in segments:
+            output_file.write(s.emit())
 
     # Now that we know the file has been fully saved to disk move it into place.
 
