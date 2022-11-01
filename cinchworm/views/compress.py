@@ -1,3 +1,4 @@
+import json
 import os
 import uuid
 from construct import Array, Int24sb, Struct
@@ -32,8 +33,8 @@ def compress_binary(request):
     # and if you write to an untrusted location you will need to do
     # some extra work to prevent symlink attacks.
 
-    safe_filename = '%s.bin' % uuid.uuid4()
-    file_path = os.path.join(os.getcwd(), 'uploads', safe_filename)
+    access_key_id = uuid.uuid4()
+    file_path = os.path.join(os.getcwd(), 'uploads', '%s.bin' % access_key_id)
 
     # We first write to a temporary file to prevent incomplete files from
     # being used.
@@ -65,6 +66,10 @@ def compress_binary(request):
     os.rename(temp_file_path, file_path)
 
     summary_page_data = dict(
-        filename=filename, input_file_size=input_file_size, output_file_size=output_file_size, safe_filename=safe_filename)
-    url = request.route_url('complete', _query=summary_page_data)
+        filename=filename, input_file_size=input_file_size, output_file_size=output_file_size)
+
+    with open(os.path.join(os.getcwd(), 'uploads', 'meta', '%s.json' % access_key_id), 'w') as metadata_file:
+        metadata_file.write(json.dumps(summary_page_data))
+
+    url = request.route_url('complete', _query=dict(id=access_key_id))
     return HTTPFound(location=url)

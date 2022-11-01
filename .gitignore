@@ -20,4 +20,5 @@ Data*.fs*
 coverage
 test
 *.sqlite
-uploads/*
+uploads/*bin
+uploads/meta/*json
