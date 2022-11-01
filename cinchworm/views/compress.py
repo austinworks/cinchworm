@@ -2,6 +2,7 @@ import os
 import uuid
 from construct import Array, Int24sb, Struct
 from pyramid.httpexceptions import HTTPFound
+from pyramid.response import Response
 from pyramid.view import view_config
 from cinchworm import segmenter as seg
 
@@ -14,6 +15,10 @@ def compress_binary(request):
     # absolute file *path* as the filename.  This example is naive; it
     # trusts user input.
 
+    if request.POST['binary_data'] == b'':
+        request.session.flash("You must include a file")
+        return HTTPFound(location=request.route_url('home'))
+    # if request.POST['binary_data']:
     filename = request.POST['binary_data'].filename
 
     # ``input_file`` contains the actual file data which needs to be

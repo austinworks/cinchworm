@@ -5,6 +5,9 @@
   <h1><span class="font-semi-bold">{{project}}</span> </h1>
   <p class="lead">Go ahead and upload a file. The allowed format is 24-bit integers</p>
   <form action="/compress" method="post" accept-charset="utf-8" enctype="multipart/form-data" class="">
+    {% for m in messages %}
+    <p>{{m}}</p>
+    {% endfor %}
 
     <div class="form-group">
       <label for="binary_data">Data to compress</label>
