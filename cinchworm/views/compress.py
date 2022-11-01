@@ -1,8 +1,7 @@
 import os
 import uuid
-import shutil
 from construct import Array, Int24sb, Struct
-from pyramid.response import Response
+from pyramid.httpexceptions import HTTPFound
 from pyramid.view import view_config
 from cinchworm import segmenter as seg
 
@@ -28,29 +27,39 @@ def compress_binary(request):
     # and if you write to an untrusted location you will need to do
     # some extra work to prevent symlink attacks.
 
-    file_path = os.path.join(os.getcwd(), 'uploads', '%s.bin' % uuid.uuid4())
+    safe_filename = '%s.bin' % uuid.uuid4()
+    file_path = os.path.join(os.getcwd(), 'uploads', safe_filename)
 
     # We first write to a temporary file to prevent incomplete files from
     # being used.
 
     temp_file_path = file_path + '~'
 
-    # Finally write the data to a temporary file
+    # establish the file size so we can include it in statistics later
     input_file.seek(0, os.SEEK_END)
     input_file_size = input_file.tell()
     input_file.seek(0)
+
+    # establish the format to be used in parsing the data
     value_count = int(input_file_size / 3)
     format = Struct("data" / Array(value_count, Int24sb))
+
+    # convert the data to standard python ints and segment it
+    # into ranges
     container = format.parse(input_file.read())
     cleandata = [int(d) for d in container.data]
     segments = seg.Segmenter(cleandata).segments()
 
+    # Finally write the data to a temporary file
     with open(temp_file_path, 'wb') as output_file:
         for s in segments:
             output_file.write(s.emit())
+        output_file_size = output_file.seek(0, os.SEEK_END)
 
     # Now that we know the file has been fully saved to disk move it into place.
-
     os.rename(temp_file_path, file_path)
 
-    return Response('OK')
+    summary_page_data = dict(
+        filename=filename, input_file_size=input_file_size, output_file_size=output_file_size, safe_filename=safe_filename)
+    url = request.route_url('complete', _query=summary_page_data)
+    return HTTPFound(location=url)

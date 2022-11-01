@@ -1,0 +1,18 @@
+{% extends "layout.jinja2" %}
+
+{% block content %}
+<div class="content">
+  <h1><span class="font-semi-bold">Cinchworm</span> </h1>
+  <p class="lead">File compression was successful</p>
+  <ul>
+    <li>Original Size: {{original_size}}</li>
+    <li>Final Size: {{final_size}}</li>
+    <li>Compression Ratio: {{(original_size/final_size)|round(2)}}</li>
+    {% if link: %}
+    <li>Download Final: <a href="{{link}}">{{filename}}</a></li>
+    {% else: %}
+    <li>{{filename}} not available for download</li>
+    {% endif %}
+  </ul>
+</div>
+{% endblock content %}
